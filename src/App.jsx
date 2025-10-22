@@ -11,10 +11,12 @@ const App = () => {
   const [bottomText, setBottomText] = useState("");
   const [topPos, setTopPos] = useState({ x: 50, y: 10 });
   const [bottomPos, setBottomPos] = useState({ x: 50, y: 90 });
+  const [textColor, setTextColor] = useState("#ffffff");
+  const [shadowEnabled, setShadowEnabled] = useState(true);
   const memeRef = useRef(null);
   const draggingRef = useRef(null);
 
-  // Load memes from API
+  // Load memes
   useEffect(() => {
     axios
       .get("https://api.imgflip.com/get_memes")
@@ -44,7 +46,7 @@ const App = () => {
     }
   };
 
-  // Draggable logic
+  // Drag logic
   const startDrag = (type, e) => {
     draggingRef.current = { type };
   };
@@ -64,10 +66,8 @@ const App = () => {
     if (type === "bottom") setBottomPos({ x: xPercent, y: yPercent });
   };
 
-  // Download meme as PNG
   const handleDownload = () => {
     if (!memeRef.current) return;
-
     html2canvas(memeRef.current, {
       useCORS: true,
       allowTaint: false,
@@ -77,12 +77,9 @@ const App = () => {
       link.download = `${selectedMeme?.name || "meme"}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
-
       toast.success("✅ Meme downloaded successfully!", {
         position: "bottom-right",
         autoClose: 2000,
-        hideProgressBar: false,
-        pauseOnHover: true,
         theme: "colored",
       });
     });
@@ -98,7 +95,7 @@ const App = () => {
 
       {selectedMeme ? (
         <div className="flex flex-col items-center">
-          {/* Meme Editor */}
+          {/* Meme Canvas */}
           <div ref={memeRef} className="relative inline-block text-center max-w-md">
             <img
               src={selectedMeme.url}
@@ -107,10 +104,13 @@ const App = () => {
               crossOrigin="anonymous"
             />
 
-            {/* Draggable Top Text */}
+            {/* Top Text */}
             <h2
-              className="absolute text-black text-2xl font-bold drop-shadow-lg uppercase cursor-move select-none"
+              className={`absolute text-2xl font-bold uppercase cursor-move select-none ${
+                shadowEnabled ? "drop-shadow-[2px_2px_2px_rgba(0,0,0,0.8)]" : ""
+              }`}
               style={{
+                color: textColor,
                 top: `${topPos.y}%`,
                 left: `${topPos.x}%`,
                 transform: "translate(-50%, -50%)",
@@ -120,10 +120,13 @@ const App = () => {
               {topText}
             </h2>
 
-            {/* Draggable Bottom Text */}
+            {/* Bottom Text */}
             <h2
-              className="absolute text-black text-2xl font-bold drop-shadow-lg uppercase cursor-move select-none"
+              className={`absolute text-2xl font-bold uppercase cursor-move select-none ${
+                shadowEnabled ? "drop-shadow-[2px_2px_2px_rgba(0,0,0,0.8)]" : ""
+              }`}
               style={{
+                color: textColor,
                 top: `${bottomPos.y}%`,
                 left: `${bottomPos.x}%`,
                 transform: "translate(-50%, -50%)",
@@ -134,7 +137,7 @@ const App = () => {
             </h2>
           </div>
 
-          {/* Text Inputs */}
+          {/* Text Controls */}
           <div className="mt-4 flex flex-col gap-2 w-full max-w-md">
             <input
               type="text"
@@ -150,6 +153,28 @@ const App = () => {
               onChange={(e) => setBottomText(e.target.value)}
               className="border p-2 rounded w-full"
             />
+
+            {/* 🎨 Color & Visibility Controls */}
+            <div className="flex items-center justify-between mt-3">
+              <label className="flex items-center gap-2">
+                <span className="text-sm font-medium">Text Color:</span>
+                <input
+                  type="color"
+                  value={textColor}
+                  onChange={(e) => setTextColor(e.target.value)}
+                  className="w-8 h-8 border rounded cursor-pointer"
+                />
+              </label>
+
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={shadowEnabled}
+                  onChange={() => setShadowEnabled(!shadowEnabled)}
+                />
+                <span className="text-sm font-medium">Add Shadow</span>
+              </label>
+            </div>
           </div>
 
           {/* Buttons */}
@@ -170,7 +195,7 @@ const App = () => {
         </div>
       ) : (
         <>
-          {/* Meme Grid */}
+          {/* Meme List */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             {memes.map((meme) => (
               <div
@@ -188,7 +213,7 @@ const App = () => {
             ))}
           </div>
 
-          {/* Upload Your Own Meme */}
+          {/* Upload Meme */}
           <div className="mb-8 flex justify-center">
             <input
               type="file"
@@ -200,7 +225,7 @@ const App = () => {
         </>
       )}
 
-      {/* Toastify Container */}
+      {/* Toastify container */}
       <ToastContainer />
     </div>
   );
