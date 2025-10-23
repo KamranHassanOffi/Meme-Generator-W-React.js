@@ -46,8 +46,9 @@ const App = () => {
     }
   };
 
-  // Drag logic
+  // --- Drag logic (supports both mouse + touch) ---
   const startDrag = (type, e) => {
+    e.preventDefault();
     draggingRef.current = { type };
   };
 
@@ -55,15 +56,21 @@ const App = () => {
     draggingRef.current = null;
   };
 
-  const onDrag = (e) => {
+  const onDrag = (clientX, clientY) => {
     if (!draggingRef.current || !memeRef.current) return;
     const rect = memeRef.current.getBoundingClientRect();
     const { type } = draggingRef.current;
-    const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
-    const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+    const xPercent = ((clientX - rect.left) / rect.width) * 100;
+    const yPercent = ((clientY - rect.top) / rect.height) * 100;
 
     if (type === "top") setTopPos({ x: xPercent, y: yPercent });
     if (type === "bottom") setBottomPos({ x: xPercent, y: yPercent });
+  };
+
+  const handleMouseMove = (e) => onDrag(e.clientX, e.clientY);
+  const handleTouchMove = (e) => {
+    const touch = e.touches[0];
+    if (touch) onDrag(touch.clientX, touch.clientY);
   };
 
   const handleDownload = () => {
@@ -88,8 +95,10 @@ const App = () => {
   return (
     <div
       className="min-h-screen bg-gray-100 p-6"
-      onMouseMove={onDrag}
+      onMouseMove={handleMouseMove}
       onMouseUp={stopDrag}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={stopDrag}
     >
       <h1 className="text-3xl font-bold text-center mb-6">🔥 Meme Generator</h1>
 
@@ -116,6 +125,7 @@ const App = () => {
                 transform: "translate(-50%, -50%)",
               }}
               onMouseDown={(e) => startDrag("top", e)}
+              onTouchStart={(e) => startDrag("top", e)}
             >
               {topText}
             </h2>
@@ -132,6 +142,7 @@ const App = () => {
                 transform: "translate(-50%, -50%)",
               }}
               onMouseDown={(e) => startDrag("bottom", e)}
+              onTouchStart={(e) => startDrag("bottom", e)}
             >
               {bottomText}
             </h2>
